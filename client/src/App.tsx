@@ -10,7 +10,6 @@ function App() {
     <div>
       <Navigation />
       <NaiveRouter />
-      <p>initial commit</p>
     </div>
   );
 }
