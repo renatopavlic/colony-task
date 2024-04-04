@@ -32,3 +32,7 @@ export enum Actions {
   SendTransaction = "SEND_TRANSACTION",
 }
 
+export interface SendTransactionPayload {
+  recipient: string;
+  amount: string;
+}

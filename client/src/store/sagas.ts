@@ -9,33 +9,35 @@ import {
 } from "ethers";
 
 import apolloClient from "../apollo/client";
-import { Actions } from "../types";
+import { Actions, Action, SendTransactionPayload } from "../types";
 import { SaveTransaction } from "../queries";
+import { navigate } from "../components/NaiveRouter";
 
-function* sendTransaction() {
-  const provider = new JsonRpcProvider("http://localhost:8545");
+function* sendTransaction({ payload }: Action<SendTransactionPayload>) {
+  // const provider = new JsonRpcProvider("http://localhost:8545");
 
   const walletProvider = new BrowserProvider(window.web3.currentProvider);
 
   const signer: Signer = yield walletProvider.getSigner();
 
-  const accounts: Array<{ address: string }> = yield provider.listAccounts();
+  // const accounts: Array<{ address: string }> = yield provider.listAccounts();
 
-  const randomAddress = () => {
+  /* const randomAddress = () => {
     const min = 1;
     const max = 19;
     const random = Math.round(Math.random() * (max - min) + min);
     return accounts[random].address;
-  };
+  }; */
 
   const transaction = {
-    to: randomAddress(),
-    value: 1000000000000000000,
+    to: payload.recipient,
+    value: payload.amount,
   };
 
   try {
-    const txResponse: TransactionResponse =
-      yield signer.sendTransaction(transaction);
+    const txResponse: TransactionResponse = yield signer.sendTransaction(
+      transaction
+    );
     const response: TransactionReceipt = yield txResponse.wait();
 
     const receipt: Transaction = yield response.getTransaction();
@@ -57,8 +59,12 @@ function* sendTransaction() {
       mutation: SaveTransaction,
       variables,
     });
+
+    // Close modal and reset form
+    document.getElementById("close-modal-button")?.click();
+    navigate(`/transaction/${receipt.hash}`);
   } catch (error) {
-    //
+    console.log("saga send transaction error", error);
   }
 }
 

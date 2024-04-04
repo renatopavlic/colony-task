@@ -1,20 +1,33 @@
 import React, { useCallback } from "react";
 import { useDispatch } from "react-redux";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 
-import { Actions } from "../types";
+import { Actions, SendTransactionPayload } from "../types";
+
+// validate Ethereum address
+const regex = new RegExp("^(0x)?[0-9a-fA-F]{40}$");
 
 const SendTransaction: React.FC = () => {
   const dispatch = useDispatch();
-  const { handleSubmit } = useForm();
+  const {
+    handleSubmit,
+    register,
+    formState: { errors },
+    reset,
+  } = useForm<SendTransactionPayload>();
 
-  const onSubmit = (data: any) => console.log(data);
+  const onSubmit: SubmitHandler<SendTransactionPayload> = (data) =>
+    handleDispatch(data);
 
-  const handleDispatch = useCallback(() => {
-    dispatch({
-      type: Actions.SendTransaction,
-    });
-  }, [dispatch]);
+  const handleDispatch = useCallback(
+    async (data: SendTransactionPayload) => {
+      dispatch({
+        type: Actions.SendTransaction,
+        payload: data,
+      });
+    },
+    [dispatch]
+  );
 
   return (
     <>
@@ -83,10 +96,24 @@ const SendTransaction: React.FC = () => {
                 <input
                   type="text"
                   id="input-recipient"
-                  className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full"
+                  className={`py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full ${
+                    errors.recipient &&
+                    "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  }`}
                   placeholder="Recipient Address"
-                  disabled
+                  {...register("recipient", {
+                    required: true,
+                    pattern: {
+                      value: regex,
+                      message: "Invalid Ethereum address",
+                    },
+                  })}
                 />
+                {errors.recipient && (
+                  <span className="text-red-500 text-sm">
+                    {errors.recipient.message}
+                  </span>
+                )}
                 <label
                   htmlFor="input-amount"
                   className="block text-sm font-bold my-2"
@@ -96,22 +123,34 @@ const SendTransaction: React.FC = () => {
                 <input
                   type="number"
                   id="input-amount"
-                  className="opacity-70 pointer-events-none py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full"
+                  className={`py-3 px-4 block bg-gray-50 border-gray-800 rounded-md text-sm focus:border-blue-500 focus:ring-blue-500 w-full ${
+                    errors.amount &&
+                    "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  }`}
                   placeholder="Amount"
-                  disabled
+                  {...register("amount", {
+                    required: true,
+                    min: { value: 0, message: "Amount must be greater than 0" },
+                  })}
                 />
+                {errors.amount && (
+                  <span className="text-red-500 text-sm">
+                    {errors.amount.message}
+                  </span>
+                )}
               </div>
               <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t">
                 <button
                   type="button"
+                  onClick={() => reset()}
+                  id="close-modal-button"
                   className="hs-dropdown-toggle py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm"
                   data-hs-overlay="#hs-basic-modal"
                 >
                   Close
                 </button>
                 <button
-                  type="button"
-                  onClick={handleDispatch}
+                  type="submit"
                   className="py-3 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-transparent font-semibold bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all text-sm"
                 >
                   Send
