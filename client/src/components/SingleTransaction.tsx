@@ -1,9 +1,10 @@
 import React from "react";
 import { useQuery } from "@apollo/client";
+import { ethers } from "ethers";
+
 import { GetSingleTransaction } from "../queries";
 import { SingleTransactionData } from "../types";
 import { navigate } from "./NaiveRouter";
-
 interface SingleTransactionProps {
   id: string | null;
 }
@@ -13,7 +14,7 @@ const SingleTransaction: React.FC<SingleTransactionProps> = ({ id }) => {
 
   const { loading, error, data } = useQuery<SingleTransactionData>(
     GetSingleTransaction,
-    { variables: { hash: id } },
+    { variables: { hash: id } }
   );
 
   if (loading) {
@@ -66,7 +67,8 @@ const SingleTransaction: React.FC<SingleTransactionProps> = ({ id }) => {
             <span className="font-bold">Recipient Address:</span> {to}
           </p>
           <p>
-            <span className="font-bold">Amount:</span> {value} ETH
+            <span className="font-bold">Amount:</span>
+            {value && ethers.formatEther(value)} ETH
           </p>
         </div>
       </div>
